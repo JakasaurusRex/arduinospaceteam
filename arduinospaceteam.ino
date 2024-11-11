@@ -51,6 +51,7 @@ void formatMacAddress(const uint8_t *macAddr, char *buffer, int maxLength)
 // Formats MAC Address
 {
   snprintf(buffer, maxLength, "%02x:%02x:%02x:%02x:%02x:%02x", macAddr[0], macAddr[1], macAddr[2], macAddr[3], macAddr[4], macAddr[5]);
+  Serial.printf("Mac Addy: %02x:%02x:%02x:%02x:%02x:%02x\n", macAddr[0], macAddr[1], macAddr[2], macAddr[3], macAddr[4], macAddr[5]);
 }
 
 
@@ -190,7 +191,7 @@ void textSetup() {
 
   tft.setTextSize(2);
   tft.fillScreen(TFT_BLACK);
-  tft.setTextColor(TFT_GREEN, TFT_BLACK);
+  tft.setTextColor(TFT_WHITE);
   drawControls();
 
   cmdRecvd = waitingCmd;
@@ -229,9 +230,11 @@ void drawControls() {
   cmd1 = genCommand();
   cmd2 = genCommand();
   cmd1.indexOf(' ');
-  tft.drawString("B1: " + cmd1.substring(0, cmd1.indexOf(' ')), 0, 90, 2);
+  tft.drawRect(0, 80, tft.width(), 75, TFT_WHITE);
+  tft.drawString("B1: " + cmd1.substring(0, cmd1.indexOf(' ')), 7, 90, 2);
   tft.drawString(cmd1.substring(cmd1.indexOf(' ') + 1), 0, 90 + lineHeight, 2);
-  tft.drawString("B2: " + cmd2.substring(0, cmd2.indexOf(' ')), 0, 170, 2);
+  tft.drawRect(0, 160, tft.width(), 75, TFT_WHITE);
+  tft.drawString("B2: " + cmd2.substring(0, cmd2.indexOf(' ')), 7, 170, 2);
   tft.drawString(cmd2.substring(cmd2.indexOf(' ') + 1), 0, 170 + lineHeight, 2);
 }
 
@@ -266,7 +269,7 @@ void loop() {
   }
 
   if (redrawCmdRecvd || redrawProgress) {
-    tft.fillRect(0, 0, 135, 90, TFT_BLACK);
+    tft.drawRect(0, 0, 135, 90, TFT_BLACK);
     tft.drawString(cmdRecvd.substring(0, cmdRecvd.indexOf(' ')), 0, 0, 2);
     tft.drawString(cmdRecvd.substring(cmdRecvd.indexOf(' ') + 1), 0, 0 + lineHeight, 2);
     redrawCmdRecvd = false;
