@@ -20,7 +20,7 @@ volatile bool scheduleCmd1Send = false;
 volatile bool scheduleCmd2Send = false;
 
 String cmdRecvd = "";
-const String waitingCmd = "Wait for cmds";
+const String waitingCmd = "Waiting";
 bool redrawCmdRecvd = false;
 
 // for drawing progress bars
@@ -230,12 +230,18 @@ void drawControls() {
   cmd1 = genCommand();
   cmd2 = genCommand();
   cmd1.indexOf(' ');
-  tft.drawRect(0, 80, tft.width(), 75, TFT_WHITE);
-  tft.drawString("B1: " + cmd1.substring(0, cmd1.indexOf(' ')), 7, 90, 2);
-  tft.drawString(cmd1.substring(cmd1.indexOf(' ') + 1), 0, 90 + lineHeight, 2);
-  tft.drawRect(0, 160, tft.width(), 75, TFT_WHITE);
-  tft.drawString("B2: " + cmd2.substring(0, cmd2.indexOf(' ')), 7, 170, 2);
-  tft.drawString(cmd2.substring(cmd2.indexOf(' ') + 1), 0, 170 + lineHeight, 2);
+
+  int firstBox = 115;
+  int secondBox = firstBox + 50;
+  tft.drawRect(0, firstBox, tft.width(), 45, TFT_WHITE);
+  tft.drawString("B1: " + cmd1.substring(0, cmd1.indexOf(' ')), 7, firstBox+5, 1.75);
+  tft.drawString(cmd1.substring(cmd1.indexOf(' ') + 1), 7, firstBox+5 + lineHeight/2, 1.75);
+  tft.drawRect(0, secondBox, tft.width(), 45, TFT_WHITE);
+  tft.drawString("B2: " + cmd2.substring(0, cmd2.indexOf(' ')), 7, secondBox+5, 1.75);
+  tft.drawString(cmd2.substring(cmd2.indexOf(' ') + 1), 7, secondBox+5 + lineHeight/2, 1.75);
+
+  tft.drawString("B1", 5, tft.height()-20, 1.5);
+  tft.drawString("B2", tft.width()-30, tft.height()-20, 1.5);
 }
 
 void loop() {
@@ -263,15 +269,15 @@ void loop() {
   }
 
   if ((millis() - lastRedrawTime) > 50) {
-    tft.fillRect(15, lineHeight * 2 + 14, 100, 6, TFT_GREEN);
-    tft.fillRect(16, lineHeight * 2 + 14 + 1, (((expireLength * 1000000.0) - timerRead(askExpireTimer)) / (expireLength * 1000000.0)) * 98, 4, TFT_RED);
+    tft.fillRect(15, 4, 100, 6, TFT_GREEN);
+    //tft.fillRect(16, lineHeight * 2 + 14 + 1, (((expireLength * 1000000.0) - timerRead(askExpireTimer)) / (expireLength * 1000000.0)) * 98, 4, TFT_RED);
     lastRedrawTime = millis();
   }
 
   if (redrawCmdRecvd || redrawProgress) {
     tft.drawRect(0, 0, 135, 90, TFT_BLACK);
-    tft.drawString(cmdRecvd.substring(0, cmdRecvd.indexOf(' ')), 0, 0, 2);
-    tft.drawString(cmdRecvd.substring(cmdRecvd.indexOf(' ') + 1), 0, 0 + lineHeight, 2);
+    tft.drawString(cmdRecvd.substring(0, cmdRecvd.indexOf(' ')), 0, 20, 1);
+    //tft.drawString(cmdRecvd.substring(cmdRecvd.indexOf(' ') + 1), 0, 0 + lineHeight, 2);
     redrawCmdRecvd = false;
 
     if (progress >= 100) {
@@ -284,8 +290,8 @@ void loop() {
       delay(6000);
       ESP.restart();
     } else {
-      tft.fillRect(15, lineHeight * 2 + 5, 100, 6, TFT_GREEN);
-      tft.fillRect(16, lineHeight * 2 + 5 + 1, progress, 4, TFT_BLUE);
+      tft.fillRect(15, 4, 100, 6, TFT_GREEN);
+      //tft.fillRect(16, lineHeight * 2 + 5 + 1, progress, 4, TFT_BLUE);
     }
     redrawProgress = false;
   }
