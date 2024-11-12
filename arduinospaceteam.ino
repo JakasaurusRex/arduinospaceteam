@@ -6,11 +6,16 @@
   Based on DroneBot Workshop 2022 ESP-NOW Multi Unit Demo
 */
 
+
+
 // Include Libraries
 #include <WiFi.h>
 #include <esp_now.h>
 #include <TFT_eSPI.h>  // Graphics and font library for ST7735 driver chip
 #include <SPI.h>
+#include "image.h"
+#include "TFT_eSPI.h"
+
 
 TFT_eSPI tft = TFT_eSPI();  // Invoke library, pins defined in User_Setup.h
 
@@ -190,8 +195,8 @@ void textSetup() {
   tft.setRotation(0);
 
   tft.setTextSize(2);
-  tft.fillScreen(TFT_BLACK);
-  tft.setTextColor(TFT_WHITE);
+  //tft.fillScreen(TFT_BLACK);
+  tft.setTextColor(TFT_WHITE, TFT_TRANSPARENT);
   drawControls();
 
   cmdRecvd = waitingCmd;
@@ -209,14 +214,21 @@ void timerSetup() {
   timerAlarm(askExpireTimer, expireLength * 1000000, true, 0);
   timerStop(askExpireTimer);
 }
+
+
 void setup() {
   Serial.begin(115200);
-
+  drawBackground();
   textSetup();
   buttonSetup();
   espnowSetup();
   timerSetup();
+  tft.setSwapBytes(true);
+  tft.setTextColor(TFT_WHITE, TFT_TRANSPARENT); 
 }
+
+
+
 
 String genCommand() {
   String verb = commandVerbs[random(ARRAY_SIZE)];
@@ -245,7 +257,6 @@ void drawControls() {
 }
 
 void loop() {
-
   if (scheduleCmd1Send) {
     broadcast("D: " + cmd1);
     scheduleCmd1Send = false;
@@ -295,4 +306,16 @@ void loop() {
     }
     redrawProgress = false;
   }
+}
+
+
+// Drawing the background
+TFT_eSprite sprite = TFT_eSprite(&tft);
+
+int imageW=169;
+int imageH=300;
+int m=imageW;
+
+void drawBackground() {
+  tft.pushImage(0, 0, 0, 0, picture);
 }
