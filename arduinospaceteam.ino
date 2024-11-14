@@ -6,18 +6,15 @@
   Based on DroneBot Workshop 2022 ESP-NOW Multi Unit Demo
 */
 
-
-
 // Include Libraries
 #include <WiFi.h>
 #include <esp_now.h>
 #include <TFT_eSPI.h>  // Graphics and font library for ST7735 driver chip
 #include <SPI.h>
 #include "image.h"
-#include "TFT_eSPI.h"
-
 
 TFT_eSPI tft = TFT_eSPI();  // Invoke library, pins defined in User_Setup.h
+TFT_eSprite sprite = TFT_eSprite(&tft); // for background
 
 String cmd1 = "";
 String cmd2 = "";
@@ -25,7 +22,7 @@ volatile bool scheduleCmd1Send = false;
 volatile bool scheduleCmd2Send = false;
 
 String cmdRecvd = "";
-const String waitingCmd = "Waiting";
+const String waitingCmd = "Waiting...";
 bool redrawCmdRecvd = false;
 
 // for drawing progress bars
@@ -52,11 +49,19 @@ int lineHeight = 30;
 #define BUTTON_RIGHT 35
 
 
+// Variables for the background
+const int imageW = 200;
+const int imageH = 300;
+const int screenW = 240;
+const int screenH = 135;
+unsigned short imageS[screenW * screenH] = {0}; 
+const int screen_middle_x = (imageW - screenW) / 2;
+const int screen_middle_y = (imageH - screenH) / 2;
+
 void formatMacAddress(const uint8_t *macAddr, char *buffer, int maxLength)
 // Formats MAC Address
 {
   snprintf(buffer, maxLength, "%02x:%02x:%02x:%02x:%02x:%02x", macAddr[0], macAddr[1], macAddr[2], macAddr[3], macAddr[4], macAddr[5]);
-  Serial.printf("Mac Addy: %02x:%02x:%02x:%02x:%02x:%02x\n", macAddr[0], macAddr[1], macAddr[2], macAddr[3], macAddr[4], macAddr[5]);
 }
 
 
@@ -195,7 +200,6 @@ void textSetup() {
   tft.setRotation(0);
 
   tft.setTextSize(2);
-  //tft.fillScreen(TFT_BLACK);
   tft.setTextColor(TFT_WHITE, TFT_TRANSPARENT);
   drawControls();
 
@@ -214,21 +218,16 @@ void timerSetup() {
   timerAlarm(askExpireTimer, expireLength * 1000000, true, 0);
   timerStop(askExpireTimer);
 }
-
-
 void setup() {
   Serial.begin(115200);
-  drawBackground();
   textSetup();
   buttonSetup();
   espnowSetup();
   timerSetup();
-  tft.setSwapBytes(true);
-  tft.setTextColor(TFT_WHITE, TFT_TRANSPARENT); 
+
+  //background
+  drawBackground();
 }
-
-
-
 
 String genCommand() {
   String verb = commandVerbs[random(ARRAY_SIZE)];
@@ -257,6 +256,7 @@ void drawControls() {
 }
 
 void loop() {
+
   if (scheduleCmd1Send) {
     broadcast("D: " + cmd1);
     scheduleCmd1Send = false;
@@ -280,15 +280,14 @@ void loop() {
   }
 
   if ((millis() - lastRedrawTime) > 50) {
-    tft.fillRect(15, 4, 100, 6, TFT_GREEN);
-    //tft.fillRect(16, lineHeight * 2 + 14 + 1, (((expireLength * 1000000.0) - timerRead(askExpireTimer)) / (expireLength * 1000000.0)) * 98, 4, TFT_RED);
+    tft.fillRect(15, lineHeight * 2 + 14, 100, 6, TFT_WHITE);
+    tft.fillRect(16, lineHeight * 2 + 14 + 1, (((expireLength * 1000000.0) - timerRead(askExpireTimer)) / (expireLength * 1000000.0)) * 98, 4, TFT_RED);
     lastRedrawTime = millis();
   }
 
   if (redrawCmdRecvd || redrawProgress) {
-    tft.drawRect(0, 0, 135, 90, TFT_BLACK);
-    tft.drawString(cmdRecvd.substring(0, cmdRecvd.indexOf(' ')), 0, 20, 1);
-    //tft.drawString(cmdRecvd.substring(cmdRecvd.indexOf(' ') + 1), 0, 0 + lineHeight, 2);
+    tft.fillRect(0, 0, 135, 90, TFT_BLACK);
+    tft.drawString(cmdRecvd.substring(0, cmdRecvd.indexOf(' ')), 0, 0, 1);
     redrawCmdRecvd = false;
 
     if (progress >= 100) {
@@ -301,21 +300,28 @@ void loop() {
       delay(6000);
       ESP.restart();
     } else {
-      tft.fillRect(15, 4, 100, 6, TFT_GREEN);
-      //tft.fillRect(16, lineHeight * 2 + 5 + 1, progress, 4, TFT_BLUE);
+      tft.fillRect(15, lineHeight * 2 + 5, 100, 6, TFT_WHITE);
+      tft.fillRect(16, lineHeight * 2 + 5 + 1, progress, 4, TFT_BLUE);
     }
     redrawProgress = false;
   }
 }
 
-
-// Drawing the background
-TFT_eSprite sprite = TFT_eSprite(&tft);
-
-int imageW=169;
-int imageH=300;
-int m=imageW;
-
 void drawBackground() {
-  tft.pushImage(0, 0, 0, 0, picture);
+  int pos = screen_middle_x + imageW * screen_middle_y;
+  int start = pos;
+  int m = screenW + pos;
+
+  // Load the portion of the image into the buffer
+  for (int i = 0; i < screenW * screenH; i++) {
+    if (start % m == 0) {
+      start += (imageW - screenW);
+      m += imageW;
+    }
+    imageS[i] = picture[start];
+    start++;
+  }
+
+  // Display the static image on the screen
+  tft.pushImage(0, 0, screenW, screenH, imageS);
 }
