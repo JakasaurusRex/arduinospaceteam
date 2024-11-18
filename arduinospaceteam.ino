@@ -415,6 +415,7 @@ void loop() {
     }
     redrawProgress = false;
   }
+   updateDigitalTimer();
 }
 
 void drawBackground() {
@@ -434,4 +435,25 @@ void drawBackground() {
 
   // Display the static image on the screen
   tft.pushImage(0, 0, screenW, screenH, imageS);
+}
+
+void updateDigitalTimer() {
+  // Calculate remaining time
+  unsigned long remainingTime = expireLength * 1000000 - timerRead(askExpireTimer); 
+  if (remainingTime < 0) remainingTime = 0; // Avoid negative values
+
+  unsigned long totalSeconds = remainingTime / 1000000;
+  unsigned long minutes = totalSeconds / 60;
+  unsigned long seconds = totalSeconds % 60;
+
+  // Clear the previous timer text
+  tft.fillRect(10, 10, 120, 30, TFT_BLACK); 
+
+  // Display time on the screen with a smaller text size
+  tft.setTextSize(1); 
+  tft.setTextColor(TFT_WHITE, TFT_BLACK);
+  tft.setCursor(100, 2);
+  tft.printf("%02lu:%02lu", minutes, seconds);
+
+  tft.setTextSize(2); // Restore default text size for other text
 }
