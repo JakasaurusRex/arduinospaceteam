@@ -352,7 +352,7 @@ void loop() {
   }
   if (scheduleCmdAsk) {
     String cmdAsk;
-    if(1 || random(ARRAY_SIZE * ARRAY_SIZE) == 7) {
+    if(random(ARRAY_SIZE * ARRAY_SIZE) == 7) {
       cmdAsk = genMulti();
       broadcast("M: " + cmdAsk);
     } else {
