@@ -38,9 +38,22 @@ hw_timer_t *askExpireTimer = NULL;
 int expireLength = 25;
 
 #define ARRAY_SIZE 10
+#define MAC_ADDR_SIZE 100
 const String commandVerbs[ARRAY_SIZE] = { "Buzz", "Engage", "Floop", "Bother", "Twist", "Jingle", "Jangle", "Yank", "Press", "Play" };
 const String commandNounsFirst[ARRAY_SIZE] = { "foo", "dev", "bobby", "jaw", "tooty", "wu", "fizz", "rot", "tea", "bee" };
 const String commandNounsSecond[ARRAY_SIZE] = { "bars", "ices", "pins", "nobs", "zops", "tangs", "bells", "wels", "pops", "bops" };
+
+const String multiCommandVerbs[ARRAY_SIZE] = { "VISIT", "PROTECT", "ATTACK", "DEFEND", "SHIELD", "TICKLE", "ROTATE", "DIVERT", "MULTIPLY", "SURRENDER" };
+const String multiCommandNouns[ARRAY_SIZE] = { "ZOO", "HOTTUB", "ENGINE-BAY", "MISSLES", "NUKE-CORE", "PENGUINS", "ELECTRICAL", "ADMIN", "SPECIMINS", "EGGS" };
+bool receivedMulti = false;
+uint8_t multiMacAddrs[MAC_ADDR_SIZE] = {0};
+int recvdFrom = 0;
+int lastFlash = 0;
+bool flashing = true;
+
+uint8_t macAddrs[MAC_ADDR_SIZE] = {0};
+int currentAddrs = 0;
+
 
 int lineHeight = 30;
 
@@ -64,13 +77,44 @@ void formatMacAddress(const uint8_t *macAddr, char *buffer, int maxLength)
   snprintf(buffer, maxLength, "%02x:%02x:%02x:%02x:%02x:%02x", macAddr[0], macAddr[1], macAddr[2], macAddr[3], macAddr[4], macAddr[5]);
 }
 
+void addMacAddr(const uint8_t *macAddr) {
+  for(int i = 0; i < MAC_ADDR_SIZE; i++) {
+    if(macAddrs[i] == 0) {
+      macAddrs[i] = macAddr[3];
+      currentAddrs++;
+      break;
+    } else if(macAddrs[i] == macAddr[3]) {
+      break;
+    }
+  }
+}
+
+void addMultiMacAddr(const uint8_t *macAddr) {
+  for(int i = 0; i < MAC_ADDR_SIZE; i++) {
+    if(multiMacAddrs[i] == 0) {
+      multiMacAddrs[i] = macAddr[3];
+      recvdFrom++;
+      break;
+    } else if(multiMacAddrs[i] == macAddr[3]) {
+      break;
+    }
+  }
+}
+
+void clearMultis() {
+  for(int i = 0; i < MAC_ADDR_SIZE; i++) {
+    multiMacAddrs[i] = 0;
+  }
+}
 
 void receiveCallback(const esp_now_recv_info_t *macAddr, const uint8_t *data, int dataLen)
 /* Called when data is received
-   You can receive 3 types of messages
+   You can receive 5 types of messages
    1) a "ASK" message, which indicates that your device should display the cmd if the device is free
    2) a "DONE" message, which indicates the current ASK? cmd has been executed
    3) a "PROGRESS" message, indicating a change in the progress of the spaceship
+   4) a "MULTI" message, indicating a user has sent a multiMessage
+   5) a "COMPLETED" message, indicating a user has completed a multi message
    
    Messages are formatted as follows:
    [A/D]: cmd
@@ -80,9 +124,16 @@ void receiveCallback(const esp_now_recv_info_t *macAddr, const uint8_t *data, in
    D: Engage the devnobs
    For example, a PROGESS message for 75% progress
    P: 75
+   For example, a MULTI message for "PROTECT ZOO"
+   M: PROTECT ZOO
+   For example, a COMPLETED MESSAGE
+   C
 */
 
 {
+  // add their mac addr
+  addMacAddr(macAddr->src_addr);
+
   // Only allow a maximum of 250 characters in the message + a null terminating byte
   char buffer[ESP_NOW_MAX_DATA_LEN + 1];
   int msgLen = min(ESP_NOW_MAX_DATA_LEN, dataLen);
@@ -111,11 +162,31 @@ void receiveCallback(const esp_now_recv_info_t *macAddr, const uint8_t *data, in
     progress = progress + 1;
     broadcast("P: " + String(progress));
     redrawCmdRecvd = true;
-
   } else if (recvd[0] == 'P') {
     recvd.remove(0, 3);
     progress = recvd.toInt();
     redrawProgress = true;
+  } else if (recvd[0] == 'M' && cmdRecvd == waitingCmd && random(100) < 30) {
+    recvd.remove(0, 3);
+    cmdRecvd = recvd;
+    redrawCmdRecvd = true;
+    receivedMulti = true;
+    recvdFrom = 0;
+    clearMultis();
+    timerStart(askExpireTimer);  //once you get an ask, a timer starts
+  } else if(recvd[0] == 'C' && receivedMulti) {
+    addMultiMacAddr(macAddr->src_addr);
+    if(recvdFrom == currentAddrs) {
+      timerWrite(askExpireTimer, 0);
+      timerStop(askExpireTimer);
+      cmdRecvd = waitingCmd;
+      progress = progress + 1;
+      broadcast("P: " + String(progress));
+      redrawCmdRecvd = true;
+      receivedMulti = false;
+      flashing = false;
+      tft.drawRect(3, 3, tft.width()-3, tft.height()-3, TFT_BLACK);
+    }
   }
 }
 
@@ -146,10 +217,14 @@ void broadcast(const String &message)
 
 void IRAM_ATTR sendCmd1() {
   scheduleCmd1Send = true;
+  if(!digitalRead(BUTTON_RIGHT))
+      scheduleCmd2Send = true;
 }
 
 void IRAM_ATTR sendCmd2() {
   scheduleCmd2Send = true;
+  if(!digitalRead(BUTTON_LEFT))
+      scheduleCmd1Send = true;
 }
 
 void IRAM_ATTR onAskReqTimer() {
@@ -198,6 +273,7 @@ void buttonSetup() {
 void textSetup() {
   tft.init();
   tft.setRotation(0);
+  tft.fillScreen(TFT_BLACK);
 
   tft.setTextSize(2);
   tft.setTextColor(TFT_WHITE, TFT_TRANSPARENT);
@@ -236,6 +312,13 @@ String genCommand() {
   return verb + " " + noun1 + noun2;
 }
 
+String genMulti() {
+  String verb = multiCommandVerbs[random(ARRAY_SIZE)];
+  String noun = multiCommandNouns[random(ARRAY_SIZE)];
+
+  return verb + " " + noun;
+}
+
 void drawControls() {
 
   cmd1 = genCommand();
@@ -256,7 +339,9 @@ void drawControls() {
 }
 
 void loop() {
-
+  if(scheduleCmd1Send && scheduleCmd2Send) {
+    broadcast("C");
+  }
   if (scheduleCmd1Send) {
     broadcast("D: " + cmd1);
     scheduleCmd1Send = false;
@@ -266,8 +351,15 @@ void loop() {
     scheduleCmd2Send = false;
   }
   if (scheduleCmdAsk) {
-    String cmdAsk = random(2) ? cmd1 : cmd2;
-    broadcast("A: " + cmdAsk);
+    String cmdAsk;
+    if(1 || random(ARRAY_SIZE * ARRAY_SIZE) == 7) {
+      cmdAsk = genMulti();
+      broadcast("M: " + cmdAsk);
+    } else {
+      cmdAsk = random(2) ? cmd1 : cmd2;
+      broadcast("A: " + cmdAsk);
+    }
+
     scheduleCmdAsk = false;
   }
   if (askExpired) {
@@ -285,9 +377,27 @@ void loop() {
     lastRedrawTime = millis();
   }
 
+  if(receivedMulti) {
+    if(flashing) {
+      tft.drawRect(3, 3, tft.width()-3, tft.height()-3, TFT_RED);
+      if(millis() - 300 > lastFlash) {
+        lastFlash = millis();
+        flashing = false;
+        tft.drawRect(3, 3, tft.width()-3, tft.height()-3, TFT_BLACK);
+      }
+    } else {
+      if(millis() > lastFlash + 1000) {
+        flashing = true;
+        tft.drawRect(3, 3, tft.width()-3, tft.height()-3, TFT_RED);
+      }
+    }
+  }
+
   if (redrawCmdRecvd || redrawProgress) {
     tft.fillRect(0, 0, 135, 90, TFT_BLACK);
-    tft.drawString(cmdRecvd.substring(0, cmdRecvd.indexOf(' ')), 0, 0, 1);
+    tft.drawString(cmdRecvd.substring(0, cmdRecvd.indexOf(' ')), 5, 5, 1);
+    if(cmdRecvd != waitingCmd)
+      tft.drawString(cmdRecvd.substring(cmdRecvd.indexOf(' ') + 1), 5, 5 + lineHeight/2, 1);
     redrawCmdRecvd = false;
 
     if (progress >= 100) {
