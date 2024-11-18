@@ -18,6 +18,8 @@ Each player has an instruction and a set of actions that they can do. Players ha
 This code was written and tested in esp 32 (Lilly TTGO). 
 
 ### ✨ Added Features  ✨
-- Change in the layout;
-- Add the command that all players need to press both buttons at the same time;  
+- Change in the layout of the screen (basically added boxes, made the text smaller, added B1 and B2 so the user knows which buttons is which, and added a background photo)
+- Add the command that all players need to press both buttons at the same time;
+- Added a unique color for each user based on macadress
+- Added a clock. 
 
