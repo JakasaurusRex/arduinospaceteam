@@ -3,10 +3,10 @@ COMS 3930 - Module 3
 
 
 ## Team 
-Jake Torres
-Mori Liu 
-Mila Lin Tabach
-Sushmita Debnath
+Jake Torres \n
+Mori Liu  \n
+Mila Lin Tabach \n
+Sushmita Debnath \n
 
 ## 🚀 Overview  
 This project is a modification of a space game, originally created by Mark Santolucito for Barnard COMS 3930. 
