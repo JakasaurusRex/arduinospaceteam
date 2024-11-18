@@ -438,22 +438,22 @@ void drawBackground() {
 }
 
 void updateDigitalTimer() {
-  // Calculate remaining time
+  // calculate remaining time
   unsigned long remainingTime = expireLength * 1000000 - timerRead(askExpireTimer); 
-  if (remainingTime < 0) remainingTime = 0; // Avoid negative values
+  if (remainingTime < 0) remainingTime = 0; 
 
   unsigned long totalSeconds = remainingTime / 1000000;
   unsigned long minutes = totalSeconds / 60;
   unsigned long seconds = totalSeconds % 60;
 
-  // Clear the previous timer text
-  tft.fillRect(10, 10, 120, 30, TFT_BLACK); 
+  // clear the previous timer text
+  //tft.fillRect(100, 2, 30, 20, TFT_BLACK); 
 
-  // Display time on the screen with a smaller text size
+  // timer display
   tft.setTextSize(1); 
   tft.setTextColor(TFT_WHITE, TFT_BLACK);
   tft.setCursor(100, 2);
   tft.printf("%02lu:%02lu", minutes, seconds);
 
-  tft.setTextSize(2); // Restore default text size for other text
+  tft.setTextSize(2); // sets default text size for other text
 }
