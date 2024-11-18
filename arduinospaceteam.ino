@@ -274,6 +274,7 @@ void textSetup() {
   tft.init();
   tft.setRotation(0);
   tft.fillScreen(TFT_BLACK);
+  drawBackground();
 
   tft.setTextSize(2);
   tft.setTextColor(TFT_WHITE, TFT_TRANSPARENT);
@@ -300,9 +301,6 @@ void setup() {
   buttonSetup();
   espnowSetup();
   timerSetup();
-
-  //background
-  drawBackground();
 }
 
 String genCommand() {
