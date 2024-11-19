@@ -3,7 +3,7 @@ COMS 3930 - Module 3
 
 <div align="center">
  
-![Demo GIF](space_demo.mp4)
+![Demo GIF](ezgif.com-video-to-gif-converter.gif)
 
 </div>
 
