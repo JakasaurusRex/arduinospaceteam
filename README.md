@@ -18,8 +18,8 @@ Each player has an instruction and a set of actions that they can do. Players ha
 This code was written and tested in esp 32 (Lilly TTGO). 
 
 ### ✨ Added Features  ✨
-- Change in the layout of the screen (basically added boxes, made the text smaller, added B1 and B2 so the user knows which buttons is which, and added a background photo)
-- Add the command that all players need to press both buttons at the same time;
+- Change in the layout of the screen (basically added boxes, made the text smaller, added B1 and B2 so the user knows which buttons are which, and added a background photo, change the color of some features)
+- Add the command that all players need to press both buttons at the same time. When any command in ALL CAPS appears, it means that all players should press both buttons. 
 - Change the progress bar color to orange;
-- Added a timer with number on the number;
+- Added a timer with a number on the number;
 
