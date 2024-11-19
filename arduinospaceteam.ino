@@ -272,9 +272,11 @@ void buttonSetup() {
 
 void textSetup() {
   tft.init();
-  tft.setRotation(0);
+  tft.setSwapBytes(true);
+  tft.setRotation(1);
   tft.fillScreen(TFT_BLACK);
   drawBackground();
+  tft.setRotation(0);
 
   tft.setTextSize(2);
   tft.setTextColor(TFT_WHITE, TFT_TRANSPARENT);
@@ -297,6 +299,11 @@ void timerSetup() {
 }
 void setup() {
   Serial.begin(115200);
+  // tft.setSwapBytes(true);
+  // tft.setRotation(1);
+  // tft.fillScreen(TFT_BLACK);
+  // drawBackground();
+  // tft.setRotation(0);
   textSetup();
   buttonSetup();
   espnowSetup();
@@ -394,7 +401,8 @@ void loop() {
   }
 
   if (redrawCmdRecvd || redrawProgress) {
-    tft.fillRect(0, 0, 135, 90, TFT_BLACK);
+    //tft.fillRect(0, 0, 135, 90, TFT_BLACK);
+    //drawBackground();
     tft.drawString(cmdRecvd.substring(0, cmdRecvd.indexOf(' ')), 5, 5, 1);
     if(cmdRecvd != waitingCmd)
       tft.drawString(cmdRecvd.substring(cmdRecvd.indexOf(' ') + 1), 5, 5 + lineHeight/2, 1);
@@ -411,7 +419,7 @@ void loop() {
       ESP.restart();
     } else {
       tft.fillRect(15, lineHeight * 2 + 5, 100, 6, TFT_WHITE);
-      tft.fillRect(16, lineHeight * 2 + 5 + 1, progress, 4, TFT_ORANGE);
+      tft.fillRect(16, lineHeight * 2 + 5 + 1, progress, 4, TFT_GREEN);
     }
     redrawProgress = false;
   }
