@@ -48,8 +48,6 @@ const String multiCommandNouns[ARRAY_SIZE] = { "ZOO", "HOTTUB", "ENGINE-BAY", "M
 bool receivedMulti = false;
 uint8_t multiMacAddrs[MAC_ADDR_SIZE] = {0};
 int recvdFrom = 0;
-int lastFlash = 0;
-bool flashing = true;
 
 uint8_t macAddrs[MAC_ADDR_SIZE] = {0};
 int currentAddrs = 0;
@@ -184,8 +182,6 @@ void receiveCallback(const esp_now_recv_info_t *macAddr, const uint8_t *data, in
       broadcast("P: " + String(progress));
       redrawCmdRecvd = true;
       receivedMulti = false;
-      flashing = false;
-      tft.drawRect(3, 3, tft.width()-3, tft.height()-3, TFT_BLACK);
     }
   }
 }
@@ -357,7 +353,7 @@ void loop() {
   }
   if (scheduleCmdAsk) {
     String cmdAsk;
-    if(random(ARRAY_SIZE * ARRAY_SIZE/2) == 7) {
+    if(random(ARRAY_SIZE) == 7) {
       cmdAsk = genMulti();
       broadcast("M: " + cmdAsk);
     } else {
@@ -382,22 +378,6 @@ void loop() {
 
     tft.fillRect(16, lineHeight * 2 + 17 + 1, (((expireLength * 1000000.0) - timerRead(askExpireTimer)) / (expireLength * 1000000.0)) * 98, 4, TFT_RED);
     lastRedrawTime = millis();
-  }
-
-  if(receivedMulti) {
-    if(flashing) {
-      tft.drawRect(3, 3, tft.width()-3, tft.height()-3, TFT_RED);
-      if(millis() - 300 > lastFlash) {
-        lastFlash = millis();
-        flashing = false;
-        tft.drawRect(3, 3, tft.width()-3, tft.height()-3, TFT_BLACK);
-      }
-    } else {
-      if(millis() > lastFlash + 1000) {
-        flashing = true;
-        tft.drawRect(3, 3, tft.width()-3, tft.height()-3, TFT_RED);
-      }
-    }
   }
 
   if (redrawCmdRecvd || redrawProgress) {
