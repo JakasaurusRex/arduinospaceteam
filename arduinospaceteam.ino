@@ -345,10 +345,20 @@ void loop() {
   }
   if (scheduleCmd1Send) {
     broadcast("D: " + cmd1);
+    tft.setTextColor(TFT_GREEN, TFT_BLACK);
+    int firstBox = 115;
+    tft.drawString("B1: " + cmd1.substring(0, cmd1.indexOf(' ')), 7, firstBox+5, 1.75);
+    tft.drawString(cmd1.substring(cmd1.indexOf(' ') + 1), 7, firstBox+5 + lineHeight/2, 1.75);
+    tft.setTextColor(TFT_WHITE, TFT_BLACK);
     scheduleCmd1Send = false;
   }
   if (scheduleCmd2Send) {
     broadcast("D: " + cmd2);
+    tft.setTextColor(TFT_GREEN, TFT_BLACK);
+    int secondBox = 165;
+    tft.drawString("B2: " + cmd2.substring(0, cmd2.indexOf(' ')), 7, secondBox+5, 1.75);
+    tft.drawString(cmd2.substring(cmd2.indexOf(' ') + 1), 7, secondBox+5 + lineHeight/2, 1.75);
+    tft.setTextColor(TFT_WHITE, TFT_BLACK);
     scheduleCmd2Send = false;
   }
   if (scheduleCmdAsk) {
