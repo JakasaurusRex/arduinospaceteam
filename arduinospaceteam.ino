@@ -290,7 +290,7 @@ void timerSetup() {
   timerAttachInterrupt(askRequestTimer, &onAskReqTimer);
   timerAlarm(askRequestTimer, 5 * 1000000, true, 0);  //send out an ask every 5 secs
 
-  askExpireTimer = timerBegin(80000000);
+  askExpireTimer = timerBegin(1000000);
   timerAttachInterrupt(askExpireTimer, &onAskExpireTimer);
   timerAlarm(askExpireTimer, expireLength * 1000000, true, 0);
   timerStop(askExpireTimer);
@@ -371,6 +371,8 @@ void loop() {
 
   if ((millis() - lastRedrawTime) > 50) {
     tft.fillRect(15, lineHeight * 2 + 14, 100, 6, TFT_WHITE);
+    Serial.println(timerRead(askExpireTimer));
+
     tft.fillRect(16, lineHeight * 2 + 14 + 1, (((expireLength * 1000000.0) - timerRead(askExpireTimer)) / (expireLength * 1000000.0)) * 98, 4, TFT_RED);
     lastRedrawTime = millis();
   }
@@ -409,7 +411,7 @@ void loop() {
       ESP.restart();
     } else {
       tft.fillRect(15, lineHeight * 2 + 5, 100, 6, TFT_WHITE);
-      tft.fillRect(16, lineHeight * 2 + 5 + 1, progress, 4, TFT_BLUE);
+      tft.fillRect(16, lineHeight * 2 + 5 + 1, progress, 4, TFT_ORANGE);
     }
     redrawProgress = false;
   }
