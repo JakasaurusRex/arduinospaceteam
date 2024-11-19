@@ -377,10 +377,10 @@ void loop() {
   }
 
   if ((millis() - lastRedrawTime) > 50) {
-    tft.fillRect(15, lineHeight * 2 + 14, 100, 6, TFT_WHITE);
+    tft.fillRect(15, lineHeight * 2 + 17, 100, 6, TFT_WHITE);
     Serial.println(timerRead(askExpireTimer));
 
-    tft.fillRect(16, lineHeight * 2 + 14 + 1, (((expireLength * 1000000.0) - timerRead(askExpireTimer)) / (expireLength * 1000000.0)) * 98, 4, TFT_RED);
+    tft.fillRect(16, lineHeight * 2 + 17 + 1, (((expireLength * 1000000.0) - timerRead(askExpireTimer)) / (expireLength * 1000000.0)) * 98, 4, TFT_RED);
     lastRedrawTime = millis();
   }
 
@@ -401,7 +401,7 @@ void loop() {
   }
 
   if (redrawCmdRecvd || redrawProgress) {
-    //tft.fillRect(0, 0, 135, 90, TFT_BLACK);
+    tft.fillRect(0, 0, 130, 50, TFT_BLACK);
     //drawBackground();
     tft.drawString(cmdRecvd.substring(0, cmdRecvd.indexOf(' ')), 5, 5, 1);
     if(cmdRecvd != waitingCmd)
@@ -418,8 +418,8 @@ void loop() {
       delay(6000);
       ESP.restart();
     } else {
-      tft.fillRect(15, lineHeight * 2 + 5, 100, 6, TFT_WHITE);
-      tft.fillRect(16, lineHeight * 2 + 5 + 1, progress, 4, TFT_GREEN);
+      tft.fillRect(15, lineHeight * 2 + 9, 100, 6, TFT_WHITE);
+      tft.fillRect(16, lineHeight * 2 + 9 + 1, progress, 4, TFT_GREEN);
     }
     redrawProgress = false;
   }
@@ -427,6 +427,7 @@ void loop() {
 }
 
 void drawBackground() {
+  tft.fillScreen(TFT_BLACK);
   int pos = screen_middle_x + imageW * screen_middle_y;
   int start = pos;
   int m = screenW + pos;
